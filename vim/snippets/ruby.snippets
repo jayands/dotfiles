@@ -453,7 +453,7 @@ snippet spec
 	  ${2}
 	end
 snippet hc
-	page.should have_content(${1})
+	expect(page).to have_content(${1})
 snippet F
 	Factory(:${1})
 snippet cuke
@@ -478,3 +478,11 @@ snippet test
 	class ${1}Test < ActiveSupport::TestCase
 	  ${2}
 	end
+snippet ex
+	expect(${1}).to ${2}
+snippet scen
+	scenario '${1}' do
+	  ${2}
+	end
+snippet save
+	save_and_open_page

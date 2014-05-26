@@ -1,33 +1,57 @@
-" Use Pathogen:
-call pathogen#runtime_append_all_bundles()
-call pathogen#helptags()
-
 " ========================================================================
 " Vundle stuff
 " ========================================================================
-set rtp+=~/.vim/bundle/vundle/
-call vundle#rc()
+set nocompatible " Required by vundle
+filetype off     " Required by vundle
 
-" Let Vundle manage Vundle (required)!
-Bundle 'gmarik/vundle'
+" set the runtime path to include Vundle and initialize
+set rtp+=~/.vim/bundle/Vundle.vim
+call vundle#begin()
+
+" let Vundle manage Vundle, required
+Plugin 'gmarik/Vundle.vim'
 
 " My bundles
-Bundle 'ervandew/supertab'
-Bundle 'kchmck/vim-coffee-script'
-Bundle 'tomtom/tcomment_vim'
-Bundle 'tpope/vim-cucumber'
-Bundle 'tpope/vim-fugitive'
-Bundle 'tpope/vim-repeat'
-Bundle 'tpope/vim-surround'
-Bundle 'tpope/vim-rails'
-Bundle 'tpope/vim-unimpaired'
-Bundle 'vim-ruby/vim-ruby'
-Bundle 'wincent/Command-T'
-Bundle 'koron/nyancat-vim'
+Plugin 'elixir-lang/vim-elixir'
+Plugin 'ervandew/supertab'
+Plugin 'kchmck/vim-coffee-script'
+Plugin 'koron/nyancat-vim'
+Plugin 'skwp/greplace.vim'
+Plugin 'tomtom/tcomment_vim'
+Plugin 'tpope/vim-bundler'
+Plugin 'tpope/vim-cucumber'
+Plugin 'tpope/vim-dispatch'
+Plugin 'tpope/vim-endwise'
+Plugin 'tpope/vim-fugitive'
+Plugin 'tpope/vim-rails'
+Plugin 'tpope/vim-repeat'
+Plugin 'tpope/vim-surround'
+Plugin 'tpope/vim-unimpaired'
+Plugin 'vim-ruby/vim-ruby'
+Plugin 'wincent/Command-T'
 
-" ================
+" nelstrom's plugin depends on kana's
+Plugin 'kana/vim-textobj-user'
+Plugin 'nelstrom/vim-textobj-rubyblock'
+
+" Clojure
+Plugin 'guns/vim-clojure-static'
+Plugin 'tpope/vim-classpath'
+Plugin 'tpope/vim-fireplace'
+
+" Colors
+Plugin 'nanotech/jellybeans.vim'
+
+" All of your Plugins must be added before the following line
+call vundle#end()            " required
+filetype plugin indent on    " required
+
+" Use the colorscheme from above
+colorscheme jellybeans
+
+" ========================================================================
 " Ruby stuff
-" ================
+" ========================================================================
 syntax on                 " Enable syntax highlighting
 filetype plugin indent on " Enable filetype-specific indenting and plugins
 
@@ -35,14 +59,25 @@ augroup myfiletypes
   " Clear old autocmds in group
   autocmd!
   " autoindent with two spaces, always expand tabs
-  autocmd FileType ruby,eruby,yaml set ai sw=2 sts=2 et
+  autocmd FileType ruby,eruby,yaml setlocal ai sw=2 sts=2 et
+  autocmd FileType ruby,eruby,yaml setlocal path+=lib
+  autocmd FileType ruby,eruby,yaml setlocal colorcolumn=80
+
+  " Clojure
+  autocmd FileType clojure setlocal colorcolumn=80
+  autocmd FileType clojure map <Leader>t :!lein test %<cr>
 augroup END
+
+" Enable built-in matchit plugin
+runtime macros/matchit.vim
 " ================
 
 let mapleader = ","
 
+map <Leader>ac :sp app/controllers/application_controller.rb<cr>
 vmap <Leader>b :<C-U>!git blame <C-R>=expand("%:p") <CR> \| sed -n <C-R>=line("'<") <CR>,<C-R>=line("'>") <CR>p <CR>
-nmap <Leader>bi :source ~/.vimrc<cr>:BundleInstall<cr>
+map <Leader>bb :!bundle install<cr>
+nmap <Leader>bi :source ~/.vimrc<cr>:PluginInstall<cr>
 vmap <Leader>bed "td?describe<cr>obed<tab><esc>"tpkdd/end<cr>o<esc>:nohl<cr>
 map <Leader>cc :!cucumber --drb %<CR>
 map <Leader>cu :Tabularize /\|<CR>
@@ -53,8 +88,9 @@ map <Leader>cm :Rjmodel client/
 map <Leader>ct :Rtemplate client/
 map <Leader>cv :Rjview client/
 map <Leader>cn :e ~/Dropbox/notes/coding-notes.txt<cr>
-map <Leader>d odebugger<cr>puts 'debugger'<esc>:w<cr>
+map <Leader>d orequire 'pry'<cr>binding.pry<esc>:w<cr>
 map <Leader>dr :e ~/Dropbox<cr>
+map <Leader>dj :e ~/Dropbox/notes/debugging_journal.txt<cr>
 map <Leader>ec :e ~/code/
 map <Leader>gac :Gcommit -m -a ""<LEFT>
 map <Leader>gc :Gcommit -m ""<LEFT>
@@ -70,7 +106,7 @@ map <Leader>j :CommandT app/assets/javascripts<cr>client/
 map <Leader>l oconsole.log 'debugging'<esc>:w<cr>
 map <Leader>m :Rmodel 
 map <Leader>nn :sp ~/Dropbox/notes/programming_notes.txt<cr>
-map <Leader>o :call RunCurrentLineInTest()<CR>
+map <Leader>o :w<cr>:call RunCurrentLineInTest()<CR>
 map <Leader>p :set paste<CR>o<esc>"*]p:set nopaste<cr>
 map <Leader>pn :sp ~/Dropbox/work/thoughtbot/notes/project-notes.txt<cr>
 map <Leader>ra :%s/
@@ -91,7 +127,7 @@ map <Leader>ss ds)i <esc>:w<cr>
 map <Leader>st :!ruby -Itest % -n "//"<left><left>
 map <Leader>su :RSunittest 
 map <Leader>sv :RSview 
-map <Leader>t :call RunCurrentTest()<CR>
+map <Leader>t :w<cr>:call RunCurrentTest()<CR>
 map <Leader>y :!rspec --drb %<cr>
 map <Leader>u :Runittest<cr>
 map <Leader>vc :RVcontroller<cr>
@@ -106,12 +142,14 @@ map <Leader>x :exec getline(".")<cr>
 
 " Edit another file in the same directory as the current file
 " uses expression to extract path from current file's path
-map <Leader>e :e <C-R>=expand("%:p:h") . '/'<CR>
-map <Leader>s :split <C-R>=expand("%:p:h") . '/'<CR>
-map <Leader>v :vnew <C-R>=expand("%:p:h") . '/'<CR>
+map <Leader>e :e <C-R>=escape(expand("%:p:h"),' ') . '/'<CR>
+map <Leader>s :split <C-R>=escape(expand("%:p:h"), ' ') . '/'<CR>
+map <Leader>v :vnew <C-R>=escape(expand("%:p:h"), ' ') . '/'<CR>
 
 map <C-h> :nohl<cr>
 imap <C-l> :<Space>
+" Note that remapping C-s requires flow control to be disabled
+" (e.g. in .bashrc or .zshrc)
 map <C-s> <esc>:w<CR>
 imap <C-s> <esc>:w<CR>
 map <C-t> <esc>:tabnew<CR>
@@ -123,7 +161,8 @@ map <C-p> :cp<CR>
 imap <c-e> <c-o>$
 imap <c-a> <c-o>^
 
-set nocompatible
+
+
 set backspace=indent,eol,start " allow backspacing over everything in insert mode
 set history=500		" keep 500 lines of command line history
 set ruler		" show the cursor position all the time
@@ -144,7 +183,7 @@ set smarttab
 set noincsearch
 set ignorecase smartcase
 set laststatus=2  " Always show status line.
-set number 
+set relativenumber
 set gdefault " assume the /g flag on :s substitutions to replace all matches in a line
 set autoindent " always set autoindenting on
 set bg=light
@@ -155,11 +194,8 @@ set tags=./tags;
 " Use _ as a word-separator
 " set iskeyword-=_
 
-" Use Ack instead of grep
-set grepprg=ack
-
-" Get rid of the delay when hitting esc!
-set noesckeys
+" Use Silver Searcher instead of grep
+set grepprg=ag
 
 " Make the omnicomplete text readable
 :highlight PmenuSel ctermfg=black
@@ -188,8 +224,8 @@ map Q <Nop>
 map K <Nop>
 
 " When loading text files, wrap them and don't split up words.
-au BufNewFile,BufRead *.txt setlocal wrap 
 au BufNewFile,BufRead *.txt setlocal lbr
+au BufNewFile,BufRead *.txt setlocal nolist " Don't display whitespace
 
 " Better? completion on command line
 set wildmenu
@@ -200,6 +236,9 @@ set wildmode=list:full
 set noesckeys
 set ttimeout
 set ttimeoutlen=1
+
+" Turn on spell-checking in markdown and text.
+" au BufRead,BufNewFile *.md,*.txt setlocal spell
 
 " Merge a tab into a split in the previous window
 function! MergeTabs()
@@ -219,6 +258,12 @@ endfunction
 
 nmap <C-W>u :call MergeTabs()<CR>
 
+
+" Squash all commits into the first during rebase
+function! SquashAll()
+  normal ggj}klllcf:w
+endfunction
+
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " Test-running stuff
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -228,10 +273,10 @@ function! RunCurrentTest()
     call SetTestFile()
 
     if match(expand('%'), '\.feature$') != -1
-      call SetTestRunner("!cucumber")
+      call SetTestRunner("!bin/cucumber")
       exec g:bjo_test_runner g:bjo_test_file
     elseif match(expand('%'), '_spec\.rb$') != -1
-      call SetTestRunner("!rspec")
+      call SetTestRunner("!bin/rspec")
       exec g:bjo_test_runner g:bjo_test_file
     else
       call SetTestRunner("!ruby -Itest")
@@ -252,7 +297,7 @@ function! RunCurrentLineInTest()
     call SetTestFileWithLine()
   end
 
-  exec "!rspec" g:bjo_test_file . ":" . g:bjo_test_file_line
+  exec "!bin/rspec" g:bjo_test_file . ":" . g:bjo_test_file_line
 endfunction
 
 function! SetTestFile()
@@ -262,16 +307,6 @@ endfunction
 function! SetTestFileWithLine()
   let g:bjo_test_file=@%
   let g:bjo_test_file_line=line(".")
-endfunction
-
-function! CorrectTestRunner()
-  if match(expand('%'), '\.feature$') != -1
-    return "cucumber"
-  elseif match(expand('%'), '_spec\.rb$') != -1
-    return "rspec"
-  else
-    return "ruby"
-  endif
 endfunction
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
@@ -327,6 +362,8 @@ function! OpenFactoryFile()
   end
 endfunction
 
+" Set gutter background to black
+highlight SignColumn ctermbg=black
 
 """"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 " RENAME CURRENT FILE (thanks Gary Bernhardt)
@@ -340,11 +377,10 @@ function! RenameFile()
         redraw!
     endif
 endfunction
-map <leader>n :call RenameFile()<cr>
+map <Leader>n :call RenameFile()<cr>
 
-" ========================================================================
-" End of things set by me.
-" ========================================================================
+" Display extra whitespace
+set list listchars=tab:»·,trail:·
 
 " Switch syntax highlighting on, when the terminal has colors
 " Also switch on highlighting the last used search pattern.
@@ -352,6 +388,13 @@ if &t_Co > 2 || has("gui_running")
   syntax on
   set hlsearch
 endif
+
+" Make it more obvious which paren I'm on
+hi MatchParen cterm=none ctermbg=black ctermfg=yellow
+
+" ========================================================================
+" End of things set by me.
+" ========================================================================
 
 " Only do this part when compiled with support for autocommands.
 if has("autocmd")
